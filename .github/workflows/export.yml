@@ -7,11 +7,6 @@ on:
     paths-ignore:
       - "**"
       - "!bin/Commands/Export**"
-  workflow_dispatch:
-    inputs:
-      pass:
-        description: "Passcode"
-        required: true
 
 jobs:
   export:
