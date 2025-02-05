@@ -82,6 +82,12 @@ jobs:
           npm run build
           npm start
 
+      - name: Setup MySQLtoSQLite
+        run: |
+          python -m pip install --upgrade pip
+          pip install mysql-to-sqlite3
+          mysql2sqlite --version
+
       - name: Setup variables
         run: |
           echo "region_count=$(mysql -uroot -proot -e 'SELECT COUNT(*) FROM world.regions;' -s)" >> $GITHUB_ENV
@@ -96,6 +102,22 @@ jobs:
         run: |
           composer install
           php console list
+
+      - name: Export JSON
+        working-directory: ./bin
+        run: php console export:json
+
+      - name: Export XML
+        working-directory: ./bin
+        run: php console export:xml
+
+      - name: Export YAML
+        working-directory: ./bin
+        run: php console export:yaml
+
+      - name: Export CSV
+        working-directory: ./bin
+        run: php console export:csv
 
       - name: Export MySQL SQL
         run: |
@@ -124,3 +146,30 @@ jobs:
           mysql2sqlite -d world -t states --mysql-password root -u root -f sqlite/states.sqlite3
           mysql2sqlite -d world -t cities --mysql-password root -u root -f sqlite/cities.sqlite3
           mysql2sqlite -d world --mysql-password root -u root -f sqlite/world.sqlite3
+
+      - name: Export SQL Server
+        working-directory: ./bin
+        run: php console export:sql-server
+
+      - name: Update README.md
+        run: |
+          sed -i "s/Total Regions : [0-9]* <br>/Total Regions : $region_count <br>/" README.md
+          sed -i "s/Total Sub Regions : [0-9]* <br>/Total Sub Regions : $subregion_count <br>/" README.md
+          sed -i "s/Total Countries : [0-9]* <br>/Total Countries : $country_count <br>/" README.md
+          sed -i "s/Total States\/Regions\/Municipalities : [0-9]* <br>/Total States\/Regions\/Municipalities : $state_count <br>/" README.md
+          sed -i "s/Total Cities\/Towns\/Districts : [0-9]* <br>/Total Cities\/Towns\/Districts : $city_count <br>/" README.md
+          sed -i "s/Last Updated On : .*$/Last Updated On : $current_date/" README.md
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: Add exported JSON, CSV, XML, YAML, MYSQL, PSQL, SQLITE & SQL Server files
+          committer: Darshan Gada <gadadarshan@gmail.com>
+          signoff: true
+          branch: export/Files
+          delete-branch: true
+          title: "(chore): Export JSON, CSV, XML, YAML, MYSQL, PSQL, SQLITE & SQL Server files"
+          labels: |
+            exports
+            automated
+          reviewers: dr5hn
