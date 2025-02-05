@@ -82,12 +82,6 @@ jobs:
           npm run build
           npm start
 
-      - name: Setup MySQLtoSQLite
-        run: |
-          python -m pip install --upgrade pip
-          pip install mysql-to-sqlite3
-          mysql2sqlite --version
-
       - name: Setup variables
         run: |
           echo "region_count=$(mysql -uroot -proot -e 'SELECT COUNT(*) FROM world.regions;' -s)" >> $GITHUB_ENV
@@ -103,30 +97,6 @@ jobs:
           composer install
           php console list
 
-      - name: Export JSON
-        working-directory: ./bin
-        run: php console export:json
-
-      - name: Export XML
-        working-directory: ./bin
-        run: php console export:xml
-
-      - name: Export YAML
-        working-directory: ./bin
-        run: php console export:yaml
-
-      - name: Export CSV
-        working-directory: ./bin
-        run: php console export:csv
-
-      - name: Export MySQL SQL
-        run: |
-          mysqldump -uroot -proot --add-drop-table --disable-keys --set-charset --skip-add-locks world regions > sql/regions.sql
-          mysqldump -uroot -proot --add-drop-table --disable-keys --set-charset --skip-add-locks world subregions > sql/subregions.sql
-          mysqldump -uroot -proot --add-drop-table --disable-keys --set-charset --skip-add-locks world countries > sql/countries.sql
-          mysqldump -uroot -proot --add-drop-table --disable-keys --set-charset --skip-add-locks world states > sql/states.sql
-          mysqldump -uroot -proot --add-drop-table --disable-keys --set-charset --skip-add-locks world cities > sql/cities.sql
-
       - name: Export PostgreSQL SQL
         env:
           PGPASSWORD: postgres
@@ -137,19 +107,6 @@ jobs:
           pg_dump --dbname=postgresql://postgres:postgres@localhost/world -Fp --clean -t states > psql/states.sql
           pg_dump --dbname=postgresql://postgres:postgres@localhost/world -Fp --clean -t cities > psql/cities.sql
           pg_dump --dbname=postgresql://postgres:postgres@localhost/world -Fp --clean > psql/world.sql
-
-      - name: Export SQLite
-        run: |
-          mysql2sqlite -d world -t regions --mysql-password root -u root -f sqlite/regions.sqlite3
-          mysql2sqlite -d world -t subregions --mysql-password root -u root -f sqlite/subregions.sqlite3
-          mysql2sqlite -d world -t countries --mysql-password root -u root -f sqlite/countries.sqlite3
-          mysql2sqlite -d world -t states --mysql-password root -u root -f sqlite/states.sqlite3
-          mysql2sqlite -d world -t cities --mysql-password root -u root -f sqlite/cities.sqlite3
-          mysql2sqlite -d world --mysql-password root -u root -f sqlite/world.sqlite3
-
-      - name: Export SQL Server
-        working-directory: ./bin
-        run: php console export:sql-server
 
       - name: Update README.md
         run: |
